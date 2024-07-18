@@ -37,9 +37,9 @@ const messages = [
 ]
 
 export async function POST(request: Request) {
-  const { fromLanguage, toLanguage, text } = await request.json()
+  const { fromLanguage, language, text } = await request.json()
 
-  if (fromLanguage === toLanguage) return Response.json({ text })
+  if (fromLanguage === language) return Response.json({ text })
 
   const completion = await openai.createChatCompletion({
     model: 'gpt-3.5-turbo',
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       ...messages,
       {
         role: ChatCompletionRequestMessageRoleEnum.User,
-        content: `${text} {{${fromLanguage}}} [[${toLanguage}]]`
+        content: `${text} {{${fromLanguage}}} [[${language}]]`
       }
     ]
   })
