@@ -12,7 +12,7 @@ const messages = [
   },
   {
     role: ChatCompletionRequestMessageRoleEnum.User,
-    content: 'Hola mundo {{Español}} [[English]]'
+    content: 'Hola mundo {{spanish}} [[english]]'
   },
   {
     role: ChatCompletionRequestMessageRoleEnum.Assistant,
@@ -20,7 +20,7 @@ const messages = [
   },
   {
     role: ChatCompletionRequestMessageRoleEnum.User,
-    content: 'How are you? {{auto}} [[Deutsch]]'
+    content: 'How are you? {{auto}} [[deutsch]]'
   },
   {
     role: ChatCompletionRequestMessageRoleEnum.Assistant,
@@ -28,7 +28,7 @@ const messages = [
   },
   {
     role: ChatCompletionRequestMessageRoleEnum.User,
-    content: 'Bon dia, com estas? {{auto}} [[Español]]'
+    content: 'Bon dia, com estas? {{auto}} [[spanish]]'
   },
   {
     role: ChatCompletionRequestMessageRoleEnum.Assistant,
@@ -37,20 +37,46 @@ const messages = [
 ]
 
 export async function POST(request: Request) {
-  const { fromLanguage, language, text } = await request.json()
+  const { fromLanguage, toLanguage, text } = await request.json()
 
-  if (fromLanguage === language) return Response.json({ text })
+  let response = {
+    spanish: {
+      text: ''
+    },
+    english: {
+      text: ''
+    },
+    deutsch: {
+      text: ''
+    },
+    français: {
+      text: ''
+    }
+  }
 
-  const completion = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
-    messages: [
-      ...messages,
-      {
-        role: ChatCompletionRequestMessageRoleEnum.User,
-        content: `${text} {{${fromLanguage}}} [[${language}]]`
-      }
-    ]
-  })
-  
-  return Response.json({ text: completion.data.choices[0]?.message?.content })
+  // Utilizamos Promise.all para esperar a que todas las promesas se resuelvan
+  await Promise.all(toLanguage.map(async (language: any) => {
+    console.log(language, fromLanguage);
+    if (fromLanguage === language) {
+      response[language].text = text
+      return
+    };
+
+    const completion = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        ...messages,
+        {
+          role: ChatCompletionRequestMessageRoleEnum.User,
+          content: `${text} {{${fromLanguage}}} [[${language}]]`
+        }
+      ]
+    });
+
+    response[language].text = completion.data.choices[0]?.message?.content
+    console.log(response);
+  }));
+
+  console.log('enviando respuesta...');
+  return Response.json(response)
 }

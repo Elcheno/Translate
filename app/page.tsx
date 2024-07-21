@@ -1,9 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useDebouncedCallback } from 'use-debounce';
-
-const WAIT_BETWEEN_CHANGE = 1500;
 
 export default function Home() {
 
@@ -26,7 +23,9 @@ export default function Home() {
   })
 
   const fetchTranslate = async () => {
-    setResponse({
+    console.log(toLanguage);
+    
+    const requestResponse = {
       spanish: {
         text: ''
       },
@@ -39,30 +38,22 @@ export default function Home() {
       français: {
         text: ''
       }
-    })
+    }
     if (!text) return
       
-    toLanguage.forEach(async language => {
-      const res = await fetch('/api/translate', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ fromLanguage, language, text })
-      })
-  
-      const data = await res.json();
-  
-      console.log(data);
-  
-      const mapResponse = { ...response }
-      mapResponse[language] = data;
-  
-      console.log(mapResponse, language);
-  
-      setResponse(mapResponse)
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fromLanguage, toLanguage, text })
     })
+  
+    const data = await res.json();
+  
+    setResponse(data)
+    console.log(data, response);
     
   }
 
@@ -73,7 +64,6 @@ export default function Home() {
     } else {
       setToLanguage([...toLanguage, language])
     }
-    
   }
 
   return (
@@ -82,7 +72,7 @@ export default function Home() {
 
         <div className="flex flex-row gap-4">
           <label className="inline-flex items-center cursor-pointer" >
-            <input type="checkbox" value="español" className="sr-only peer" defaultChecked onChange={e => updateToLanguage(e.target.value)}/>
+            <input type="checkbox" value="spanish" className="sr-only peer" defaultChecked onChange={e => updateToLanguage(e.target.value)}/>
             <div className="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Español</span>
           </label>
@@ -92,6 +82,7 @@ export default function Home() {
             <div className="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Alemán</span>
           </label>
+
 
           <label className="inline-flex items-center cursor-pointer" >
             <input type="checkbox" value="français" className="sr-only peer" defaultChecked onChange={e => updateToLanguage(e.target.value)}/>
@@ -117,17 +108,24 @@ export default function Home() {
         <input className="rounded" type="text" value={text} onChange={e => setText(e.target.value)}/>
 
         <div className="rounded bg-white min-h-10 p-4 flex flex-col justify-center items-center">
-          <span>{ response.english.text }</span>
-          <span>{ response.spanish.text }</span>
-          <span>{ response.français.text }</span>
-          <span>{ response.deutsch.text }</span>
+          <ViewText text={response.spanish.text} />
+          <ViewText text={response.english.text} />
+          <ViewText text={response.deutsch.text} />
+          <ViewText text={response.français.text} />
         </div>
-
+ 
         <div>
           <button className="rounded bg-white min-h-10 p-4 flex justify-center items-center" onClick={fetchTranslate} type="submit">Translate</button>
         </div>
 
       </form>
     </>
+  )
+}
+
+
+function ViewText ({ text }: { text: string }) {
+  return (
+    <span>{text}</span>
   )
 }
